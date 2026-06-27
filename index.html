@@ -264,10 +264,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;padding:1rem}
       </div>
       <div class="sb-cfg" id="sbBody" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div class="f"><label>Project URL</label><input class="cfg-inp" id="sbUrl" placeholder="https://xxx.supabase.co" oninput="onCfg()" /></div>
-          <div class="f"><label>Anon Public Key</label><input class="cfg-inp" id="sbKey" placeholder="sb_publishable_..." oninput="onCfg()" /></div>
+          <div class="f"><label>Project URL</label><input class="cfg-inp" id="sbUrl" placeholder="https://xxx.supabase.co" value="https://jqfyupbccbanayretjva.supabase.co" oninput="onCfg()" /></div>
+          <div class="f"><label>Anon Public Key</label><input class="cfg-inp" id="sbKey" placeholder="sb_publishable_..." value="sb_publishable_Hl0fNrSD3a4fVll4y7iPSw_8zSKQF0u" oninput="onCfg()" /></div>
         </div>
-        <div class="f" style="max-width:220px"><label>Operador</label><input id="operador" placeholder="Seu nome" style="font-size:13px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);width:100%" /></div>
+        
         <div id="testRes" style="font-size:12px;margin-top:8px;display:none"></div>
       </div>
     </div>
@@ -369,10 +369,9 @@ function flashScan(cls){const i=document.getElementById('scanInput');i.classList
 function addEmail(){const i=document.getElementById('emailInp'),val=i.value.trim();if(val&&val.includes('@')&&!emails.includes(val)){emails.push(val);i.value='';renderEmailTags();}}
 function removeEmail(e){emails=emails.filter(x=>x!==e);renderEmailTags();}
 function renderEmailTags(){document.getElementById('emailTags').innerHTML=emails.map(e=>`<span class="etag"><i class="ti ti-mail" style="font-size:11px"></i>${e}<button onclick="removeEmail('${e}')">×</button></span>`).join('');}
-function getH(){return{numHU:v('numHU')||'HU_001',dest:v('destino'),orig:v('origem')||'SMG6 - Uberlândia',dataEnvio:v('dataEnvio')||null,lo:v('lacreOrigen'),sc:parseInt(v('sacas'))||0,pl:parseInt(v('pallets'))||0,op:v('operador')};}
+const SB_URL='https://jqfyupbccbanayretjva.supabase.co';const SB_KEY='sb_publishable_Hl0fNrSD3a4fVll4y7iPSw_8zSKQF0u';function getH(){return{numHU:v('numHU')||'HU_001',dest:v('destino'),orig:v('origem')||'SMG6 - Uberlândia',dataEnvio:v('dataEnvio')||null,lo:v('lacreOrigen'),sc:parseInt(v('sacas'))||0,pl:parseInt(v('pallets'))||0,op:'SMG6 Expedição'};}
 async function testConn(){
-  const url=v('sbUrl').replace(/\/$/,''),key=v('sbKey');
-  if(!url||!key){showTR(false,'Cole a URL e a Key');return;}
+  const url=SB_URL,key=SB_KEY;
   try{const r=await fetch(`${url}/rest/v1/expedicao_shipments?limit=1`,{headers:{'apikey':key,'Authorization':`Bearer ${key}`}});
   if(r.ok)showTR(true,'Conexão OK — tabela encontrada!');
   else showTR(false,`Erro ${r.status} — verifique as credenciais`);}
@@ -381,8 +380,7 @@ async function testConn(){
 function showTR(ok,msg){const e=document.getElementById('testRes');e.style.display='block';e.style.color=ok?'var(--green)':'var(--red)';e.innerHTML=`<i class="ti ti-${ok?'circle-check':'alert-triangle'}"></i> ${msg}`;if(ok){document.getElementById('dbDot').className='db-dot ok';document.getElementById('dbLbl').textContent='Conectado';}}
 function showWarn(id){const e=document.getElementById(id);e.style.display='flex';setTimeout(()=>e.style.display='none',3000);}
 async function salvarSB(){
-  const url=v('sbUrl').replace(/\/$/,''),key=v('sbKey');
-  if(!url||!key){toggleSB();flashFb('err','Configure o Supabase antes de salvar');return;}
+  const url=SB_URL,key=SB_KEY;
   if(!packages.length){showWarn('warnP');return;}
   const h=getH();
   const records=packages.map(p=>({num_hu:h.numHU,destino_hu:h.dest,origem:h.orig,data_envio:h.dataEnvio||undefined,lacre_origen:h.lo,sacas:h.sc,pallets:h.pl,shipment_id:p.shipmentId,destino_ship:p.destino,motivo:p.motivo||null,observacao:p.obs||null,operador:h.op||null,status:'registrado'}));
@@ -436,8 +434,10 @@ function abrirEmail(){
 async function exportAll(){if(!packages.length){showWarn('warnP');return;}await salvarSB();gerarXLSX();setTimeout(gerarCSV,400);setTimeout(abrirEmail,800);}
 document.getElementById('numHU').value=fmtHU(huCounter);
 document.getElementById('dataEnvio').value=new Date().toISOString().split('T')[0];
+if(document.getElementById('sbUrl'))document.getElementById('sbUrl').value=SB_URL;
+if(document.getElementById('sbKey'))document.getElementById('sbKey').value=SB_KEY;
 buildAll();updateStats();
-setTimeout(()=>document.getElementById('scanInput').focus(),200);
+setTimeout(()=>{testConn();document.getElementById('scanInput').focus();},500);
 </script>
 </body>
 </html>
