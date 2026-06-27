@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Expedição HU — SMG6</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#242424;--border:#2e2e2e;--border2:#3a3a3a;
+  --text:#e8e8e8;--text2:#a0a0a0;--text3:#666;
+  --green:#22c55e;--green-bg:#0d2818;--green-border:#1a4d2e;
+  --amber:#f59e0b;--amber-bg:#271d08;--amber-border:#4d3810;
+  --red:#ef4444;--red-bg:#270d0d;--red-border:#4d1a1a;
+  --blue:#3b82f6;--blue-bg:#0d1a2e;--blue-border:#1a3050;
+  --yellow:#FFE500;--navy:#0A1628;
+  --radius:8px;--radius-sm:5px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:1rem}
+.app{max-width:920px;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px}
+.logo{width:36px;height:36px;background:var(--yellow);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--navy);flex-shrink:0}
+.topbar h1{font-size:15px;font-weight:600}
+.topbar p{font-size:11px;color:var(--text2);margin-top:1px}
+.pills{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--bg3);white-space:nowrap;color:var(--text)}
+.pill.ok{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.pill.warn{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+.db-dot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0}
+.db-dot.ok{background:var(--green)}.db-dot.err{background:var(--red)}.db-dot.spin{background:var(--amber);animation:p 1s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:10px}
+.card-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;margin-bottom:.85rem;color:var(--text)}
+.f{display:flex;flex-direction:column;gap:3px}
+.f label{font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+.f input,.f select{font-size:13px;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);width:100%}
+.f input:focus,.f select:focus{outline:none;border-color:var(--yellow)}
+.hu-row{display:grid;grid-template-columns:110px 1fr 1fr 1fr 75px 75px;gap:8px;align-items:end}
+.hu-num-wrap{display:flex}
+.hu-num-wrap input{border-radius:var(--radius-sm) 0 0 var(--radius-sm);font-family:monospace;font-weight:600}
+.btn-next{padding:0 8px;border:1px solid var(--border2);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;background:var(--bg3);cursor:pointer;font-size:11px;color:var(--text2)}
+.btn-next:hover{background:var(--yellow);color:var(--navy);border-color:var(--yellow)}
+.scan-input{width:100%;font-size:14px;padding:10px 13px;border:2px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text)}
+.scan-input:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,229,0,.1)}
+.scan-input.ok{border-color:var(--green);background:var(--green-bg)}
+.scan-input.dup{border-color:var(--amber);background:var(--amber-bg)}
+.batch-box{width:100%;font-size:12px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);resize:vertical;min-height:75px;font-family:monospace}
+.batch-box:focus{outline:none;border-color:var(--yellow)}
+.btn-add{padding:9px 16px;background:var(--yellow);color:var(--navy);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-add:hover{background:#F0D800}
+.btn-sm{padding:6px 12px;font-size:12px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:none;color:var(--text);cursor:pointer;white-space:nowrap}
+.btn-sm:hover{background:var(--bg3)}
+.btn-red{border-color:var(--red-border);color:var(--red)}
+.btn-red:hover{background:var(--red-bg)}
+.defaults-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.def-select{font-size:12px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);min-width:200px}
+.def-input{font-size:12px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);width:130px}
+.motivo-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block}
+.d-blue{background:#378ADD}.d-amber{background:#EF9F27}.d-red{background:#E24B4A}.d-teal{background:#1D9E75}.d-gray{background:#666}
+.fb{font-size:12px;padding:6px 10px;border-radius:var(--radius-sm);margin-top:8px;display:none;align-items:center;gap:6px}
+.fb.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);display:flex}
+.fb.dup{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);display:flex}
+.fb.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:flex}
+.tgl-btn{font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0}
+.tgl-btn:hover{color:var(--text)}
+.motivo-mgr{margin-top:8px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.m-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;font-size:11px;border:1px solid var(--border2);background:var(--bg2);margin:2px}
+.m-tag button{background:none;border:none;cursor:pointer;color:var(--text2);padding:0;line-height:1;font-size:12px;margin-left:2px}
+.m-tag button:hover{color:var(--red)}
+.add-motivos-box{font-size:12px;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);resize:none;width:100%;height:60px;font-family:monospace}
+.bulk-bar{background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius-sm);padding:8px 12px;display:none;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.bulk-sel{font-size:12px;padding:5px 8px;border:1px solid var(--blue-border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);min-width:170px}
+.btn-bulk{padding:6px 12px;font-size:12px;border:1px solid var(--blue-border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--blue);cursor:pointer}
+.btn-bulk-del{padding:6px 12px;font-size:12px;border:1px solid var(--red-border);border-radius:var(--radius-sm);background:none;color:var(--red);cursor:pointer}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.tbl th{text-align:left;padding:7px 8px;font-size:11px;font-weight:500;color:var(--text2);border-bottom:1px solid var(--border);background:var(--bg3)}
+.tbl td{padding:5px 6px;border-bottom:1px solid var(--border);vertical-align:middle;overflow:hidden}
+.tbl tr:hover td{background:var(--bg3)}
+.tbl tr.sel td{background:var(--blue-bg)}
+.td-mono{font-family:monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-seq{font-size:11px;color:var(--text2);text-align:center}
+.td-inp{border:1px solid var(--border2);border-radius:4px;padding:4px 6px;font-size:12px;width:100%;background:var(--bg2);color:var(--text)}
+.td-inp:focus{outline:none;border-color:var(--yellow)}
+.td-sel{border:1px solid var(--border2);border-radius:4px;padding:4px 5px;font-size:11px;width:100%;background:var(--bg2);color:var(--text)}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:2px;border-radius:4px;display:flex}
+.del-btn:hover{color:var(--red)}
+.empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:13px}
+.export-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:.8rem}
+.btn-save{padding:9px 16px;background:var(--navy);color:var(--yellow);border:1px solid #2a3a5c;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-save:hover{opacity:.9}
+.btn-xl{padding:9px 14px;background:#1D6F42;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-csv{padding:9px 14px;background:#0055A2;color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-email{padding:9px 14px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-all{padding:10px 20px;background:var(--yellow);color:var(--navy);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-all:hover{background:#F0D800}
+.save-st{font-size:12px;padding:7px 10px;border-radius:var(--radius-sm);display:none;align-items:center;gap:6px;margin-top:8px}
+.save-st.saving{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);display:flex}
+.save-st.saved{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);display:flex}
+.save-st.saveerr{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:flex}
+.sb-cfg{padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:8px}
+.cfg-inp{font-size:12px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:monospace;width:100%}
+.cfg-inp:focus{outline:none;border-color:var(--yellow)}
+.mtags-email{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.etag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;font-size:12px}
+.etag button{background:none;border:none;cursor:pointer;color:var(--text2);padding:0;margin-left:2px}
+.warn-bar{font-size:12px;padding:6px 10px;border-radius:var(--radius-sm);background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);display:flex;align-items:center;gap:6px;margin-top:6px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="logo">SMG6</div>
+    <div>
+      <h1>Expedição HU — SMG6</h1>
+      <p>Scanner em massa · Supabase · XLSX + CSV + Email</p>
+    </div>
+    <div class="pills">
+      <span class="pill"><i class="ti ti-packages"></i> <span id="stTotal">0</span> pkgs</span>
+      <span class="pill ok" id="pillOk" style="display:none"><i class="ti ti-circle-check"></i> <span id="stOk">0</span> c/motivo</span>
+      <span class="pill warn" id="pillWarn" style="display:none"><i class="ti ti-alert-triangle"></i> <span id="stWarn">0</span> s/motivo</span>
+      <span class="pill"><span class="db-dot" id="dbDot"></span> <span id="dbLbl">Supabase</span></span>
+    </div>
+  </div>
+
+  <!-- HU CONFIG -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-file-spreadsheet"></i> HU do romaneio</div>
+    <div class="hu-row">
+      <div class="f">
+        <label>Nº HU</label>
+        <div class="hu-num-wrap">
+          <input id="numHU" style="font-family:monospace;font-weight:600;border-radius:5px 0 0 5px" />
+          <button class="btn-next" onclick="nextHU()" title="Próximo HU"><i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+      <div class="f"><label>Data do envio</label><input type="date" id="dataEnvio" /></div>
+      <div class="f"><label>Destino (XD/FULL)</label><input id="destino" placeholder="BRXSP5 - Cravinhos" oninput="updateStats()" /></div>
+      <div class="f"><label>Origem (SVC)</label><input id="origem" value="SMG6 - Uberlândia" /></div>
+      <div class="f"><label>Sacas</label><input type="number" id="sacas" min="0" placeholder="0" /></div>
+      <div class="f"><label>Pallets</label><input type="number" id="pallets" min="0" placeholder="0" /></div>
+    </div>
+    <div class="f" style="margin-top:8px;max-width:200px"><label>Lacre Origen</label><input id="lacreOrigen" placeholder="000123" /></div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-barcode"></i> Scanner de pacotes</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="scan-input" id="scanInput" placeholder="Bipe o código de barras (Enter para adicionar)..." onkeydown="if(event.key==='Enter')doScan()" autocomplete="off" spellcheck="false" />
+      <button class="btn-add" onclick="doScan()"><i class="ti ti-plus"></i> Adicionar</button>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.3px">Importar em lote — cole IDs (um por linha, vírgula ou espaço)</span>
+        <span id="batchCount" style="font-size:11px;color:var(--text2)"></span>
+      </div>
+      <textarea class="batch-box" id="batchInput" placeholder="47347734675&#10;47347734676&#10;47347734677&#10;..." oninput="onBatchInput()"></textarea>
+      <div style="display:flex;gap:7px;margin-top:6px">
+        <button class="btn-add" onclick="doBatch()"><i class="ti ti-file-import"></i> Importar IDs</button>
+        <button class="btn-sm" onclick="document.getElementById('batchInput').value='';document.getElementById('batchCount').textContent=''">Limpar</button>
+      </div>
+    </div>
+    <div id="fb" class="fb"></div>
+
+    <!-- MOTIVO PADRÃO -->
+    <div class="defaults-row">
+      <span style="font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.3px">Motivo padrão</span>
+      <span class="motivo-dot" id="defDot" style="display:none"></span>
+      <select class="def-select" id="motivoPadrao" onchange="updateDefDot()">
+        <option value="">— sem motivo padrão —</option>
+      </select>
+      <button class="btn-sm" onclick="applyDefaultsToAll()"><i class="ti ti-refresh"></i> Aplicar a todos</button>
+      <button class="tgl-btn" onclick="toggleMgr()" id="mgrBtn" style="margin-left:auto">
+        <i class="ti ti-chevron-right" id="mgrChev"></i> Gerenciar motivos
+      </button>
+    </div>
+
+    <div class="motivo-mgr" id="mgrBody" style="display:none">
+      <div style="font-size:11px;color:var(--text2);font-weight:500;margin-bottom:6px">Motivos disponíveis — × para remover</div>
+      <div id="motiTags" style="margin-bottom:8px"></div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:5px">Adicionar novos (um por linha):</div>
+      <textarea class="add-motivos-box" id="newMotivos" placeholder="Falta de tentativa&#10;Endereço comercial fechado&#10;..."></textarea>
+      <button class="btn-sm" style="margin-top:6px" onclick="addMotivos()"><i class="ti ti-plus"></i> Adicionar à lista</button>
+    </div>
+  </div>
+
+  <!-- BULK BAR -->
+  <div class="bulk-bar" id="bulkBar">
+    <span style="font-size:13px;font-weight:600;color:var(--blue)"><span id="selCt">0</span> selecionados</span>
+    <span class="motivo-dot" id="bulkDot" style="display:none"></span>
+    <select class="bulk-sel" id="bulkMotivo" onchange="updateBulkDot()">
+      <option value="">— definir motivo —</option>
+    </select>
+    <input class="td-inp" id="bulkDest" placeholder="Destino..." style="width:110px;font-size:12px" />
+    <button class="btn-bulk" onclick="applyBulk()"><i class="ti ti-check"></i> Aplicar</button>
+    <button class="btn-bulk-del" onclick="deleteSelected()"><i class="ti ti-trash"></i> Remover</button>
+    <button class="btn-sm" onclick="clearSel()" style="margin-left:auto">Cancelar</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card" style="padding:.8rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;padding:0 .25rem">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i> Pacotes registrados (<span id="pkgCt">0</span>)</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn-sm" onclick="selectAll()"><i class="ti ti-checkbox"></i> Todos</button>
+        <button class="btn-sm btn-red" onclick="clearAll()"><i class="ti ti-trash"></i> Limpar</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <colgroup>
+          <col style="width:26px"><col style="width:28px"><col style="width:155px">
+          <col style="width:95px"><col style="width:12px"><col style="width:160px">
+          <col style="width:95px"><col style="width:26px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="chkAll" onchange="toggleAll(this.checked)" /></th>
+            <th>#</th><th>Nº Shipment</th><th>Destino</th>
+            <th></th><th>Motivo</th><th>Observação</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="pkgBody">
+          <tr><td colspan="8"><div class="empty"><i class="ti ti-barcode" style="font-size:30px;opacity:.2;display:block;margin-bottom:8px"></i>Bipe ou importe IDs para começar</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-send"></i> Salvar e exportar</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">Destinatários do email</div>
+      <div class="mtags-email" id="emailTags"></div>
+      <div style="display:flex;gap:7px;margin-top:5px">
+        <input type="email" id="emailInp" placeholder="email@mercadolivre.com" style="flex:1;font-size:13px;padding:6px 9px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text)" onkeydown="if(event.key==='Enter')addEmail()" />
+        <button class="btn-sm" onclick="addEmail()">+ Adicionar</button>
+      </div>
+      <input type="text" id="emailSubj" style="margin-top:5px;width:100%;font-size:13px;padding:6px 9px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text)" placeholder="Assunto do email" />
+    </div>
+    <div class="export-btns">
+      <button class="btn-all" onclick="exportAll()"><i class="ti ti-bolt"></i> Tudo: salvar + XLSX + CSV + email</button>
+      <button class="btn-save" onclick="salvarSB()"><i class="ti ti-database-import"></i> Salvar Supabase</button>
+      <button class="btn-xl" onclick="gerarXLSX()"><i class="ti ti-file-spreadsheet"></i> XLSX</button>
+      <button class="btn-csv" onclick="gerarCSV()"><i class="ti ti-file-text"></i> CSV</button>
+      <button class="btn-email" onclick="abrirEmail()"><i class="ti ti-mail"></i> Email</button>
+    </div>
+    <div class="save-st" id="saveSt"></div>
+    <div id="warnP" class="warn-bar"><i class="ti ti-alert-triangle"></i> Nenhum pacote registrado.</div>
+    <div id="warnE" class="warn-bar"><i class="ti ti-alert-triangle"></i> Adicione ao menos um email.</div>
+
+    <!-- SUPABASE CONFIG -->
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <button class="tgl-btn" onclick="toggleSB()" id="sbBtn">
+          <i class="ti ti-chevron-right" id="sbChev"></i> Configuração Supabase
+        </button>
+        <button class="btn-sm" id="btnTest" onclick="testConn()" style="display:none"><i class="ti ti-plug"></i> Testar conexão</button>
+      </div>
+      <div class="sb-cfg" id="sbBody" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="f"><label>Project URL</label><input class="cfg-inp" id="sbUrl" placeholder="https://xxx.supabase.co" oninput="onCfg()" /></div>
+          <div class="f"><label>Anon Public Key</label><input class="cfg-inp" id="sbKey" placeholder="sb_publishable_..." oninput="onCfg()" /></div>
+        </div>
+        <div class="f" style="max-width:220px"><label>Operador</label><input id="operador" placeholder="Seu nome" style="font-size:13px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);width:100%" /></div>
+        <div id="testRes" style="font-size:12px;margin-top:8px;display:none"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+let packages=[],selected=new Set(),emails=[],pid=0,huCounter=1;
+let MOTIVOS=[
+  {label:'Fora da área de cobertura',color:'blue'},
+  {label:'Endereço não localizado',color:'blue'},
+  {label:'Destinatário ausente',color:'amber'},
+  {label:'Recusado pelo destinatário',color:'amber'},
+  {label:'Tentativa sem sucesso',color:'amber'},
+  {label:'CEP incorreto / incompleto',color:'amber'},
+  {label:'Avariado',color:'red'},
+  {label:'Missort',color:'red'},
+  {label:'Devolução solicitada',color:'teal'},
+  {label:'Outro',color:'gray'}
+];
+const DOT={blue:'d-blue',amber:'d-amber',red:'d-red',teal:'d-teal',gray:'d-gray'};
+const v=id=>(document.getElementById(id)||{}).value||'';
+function getMC(label){const m=MOTIVOS.find(x=>x.label===label);return m?DOT[m.color]:'d-gray';}
+function buildOpts(selId){
+  const s=document.getElementById(selId);if(!s)return;
+  const c=s.value;
+  s.innerHTML='<option value="">— sem motivo —</option>'+MOTIVOS.map(m=>`<option value="${m.label}">${m.label}</option>`).join('');
+  s.value=c;
+}
+function buildAll(){buildOpts('motivoPadrao');buildOpts('bulkMotivo');renderMotiTags();renderTable();}
+function renderMotiTags(){
+  document.getElementById('motiTags').innerHTML=MOTIVOS.map((m,i)=>
+    `<span class="m-tag"><span class="motivo-dot ${DOT[m.color]}"></span>${m.label}<button onclick="removeMotivo(${i})">×</button></span>`
+  ).join('');
+}
+function removeMotivo(i){MOTIVOS.splice(i,1);buildAll();}
+function addMotivos(){
+  const lines=document.getElementById('newMotivos').value.split(/[\n\r]+/).map(s=>s.trim()).filter(Boolean);
+  let added=0;
+  lines.forEach(label=>{if(!MOTIVOS.find(m=>m.label===label)){MOTIVOS.push({label,color:'gray'});added++;}});
+  document.getElementById('newMotivos').value='';
+  buildAll();
+  if(added)flashFb('ok',`${added} motivo(s) adicionado(s)`);
+}
+function updateDefDot(){const d=document.getElementById('defDot');const c=getMC(v('motivoPadrao'));d.className=`motivo-dot ${c}`;d.style.display=v('motivoPadrao')?'inline-block':'none';}
+function updateBulkDot(){const d=document.getElementById('bulkDot');const c=getMC(v('bulkMotivo'));d.className=`motivo-dot ${c}`;d.style.display=v('bulkMotivo')?'inline-block':'none';}
+function fmtHU(n){return`HU_${String(n).padStart(3,'0')}`;}
+function nextHU(){if(packages.length>0&&!confirm(`Avançar para o próximo HU? Os ${packages.length} pacotes serão limpos.`))return;huCounter++;packages=[];selected.clear();document.getElementById('numHU').value=fmtHU(huCounter);renderTable();updateStats();}
+let mgrOpen=false,sbOpen=false;
+function toggleMgr(){mgrOpen=!mgrOpen;document.getElementById('mgrBody').style.display=mgrOpen?'block':'none';document.getElementById('mgrChev').className=mgrOpen?'ti ti-chevron-down':'ti ti-chevron-right';}
+function toggleSB(){sbOpen=!sbOpen;document.getElementById('sbBody').style.display=sbOpen?'block':'none';document.getElementById('sbChev').className=sbOpen?'ti ti-chevron-down':'ti ti-chevron-right';document.getElementById('btnTest').style.display=sbOpen?'':'none';}
+function onCfg(){document.getElementById('dbDot').className='db-dot';document.getElementById('dbLbl').textContent='Supabase';}
+function parseIds(raw){return raw.split(/[\n\r,;|\t\s]+/).map(s=>s.trim()).filter(s=>s.length>4);}
+function doScan(){const inp=document.getElementById('scanInput'),raw=inp.value.trim();if(!raw)return;const ids=parseIds(raw);if(ids.length>1)bulkAdd(ids);else singleAdd(raw);inp.value='';inp.focus();}
+function onBatchInput(){const n=parseIds(document.getElementById('batchInput').value).length;document.getElementById('batchCount').textContent=n?`${n} IDs detectados`:'';} 
+function doBatch(){const ids=parseIds(document.getElementById('batchInput').value);if(!ids.length){flashFb('err','Nenhum ID válido');return;}bulkAdd(ids);document.getElementById('batchInput').value='';document.getElementById('batchCount').textContent='';}
+function singleAdd(id){if(packages.find(p=>p.shipmentId===id)){flashFb('dup',`Duplicado: ${id}`);flashScan('dup');}else{addPkg(id);flashFb('ok',`✓ ${id} registrado`);flashScan('ok');}}
+function bulkAdd(ids){let a=0,d=0;ids.forEach(id=>{if(packages.find(p=>p.shipmentId===id))d++;else{addPkg(id);a++;}});flashFb(d&&!a?'dup':'ok',`✓ ${a} importados${d?` · ${d} dup. ignorados`:''}`);if(a)flashScan('ok');}
+function addPkg(shipmentId){pid++;packages.push({id:pid,shipmentId,destino:v('destino').split(' ')[0],motivo:v('motivoPadrao'),obs:''});renderTable();updateStats();}
+function setProp(id,prop,val){const p=packages.find(x=>x.id===id);if(p){p[prop]=val;if(prop==='motivo'){const dot=document.getElementById(`dot_${id}`);if(dot){dot.className=`motivo-dot ${getMC(val)}`;dot.style.display=val?'inline-block':'none';}}updateStats();}}
+function deletePkg(id){packages=packages.filter(p=>p.id!==id);selected.delete(id);renderTable();updateStats();updBulk();}
+function clearAll(){if(!packages.length)return;if(confirm(`Remover todos os ${packages.length} pacotes?`)){packages=[];selected.clear();renderTable();updateStats();updBulk();}}
+function selectAll(){packages.forEach(p=>selected.add(p.id));renderTable();updBulk();}
+function clearSel(){selected.clear();renderTable();updBulk();}
+function toggleAll(c){if(c)selectAll();else clearSel();}
+function toggleSel(id,c){if(c)selected.add(id);else selected.delete(id);updBulk();document.getElementById('chkAll').checked=packages.length>0&&selected.size===packages.length;}
+function updBulk(){const b=document.getElementById('bulkBar');b.style.display=selected.size>0?'flex':'none';document.getElementById('selCt').textContent=selected.size;}
+function applyDefaultsToAll(){const m=v('motivoPadrao');packages.forEach(p=>{if(m&&!p.motivo)p.motivo=m;});renderTable();updateStats();flashFb('ok','Padrões aplicados');}
+function applyBulk(){const m=v('bulkMotivo'),d=v('bulkDest');selected.forEach(id=>{const p=packages.find(x=>x.id===id);if(p){if(m)p.motivo=m;if(d)p.destino=d;}});renderTable();updateStats();flashFb('ok',`Aplicado a ${selected.size} pacote(s)`);}
+function deleteSelected(){packages=packages.filter(p=>!selected.has(p.id));selected.clear();renderTable();updateStats();updBulk();}
+function updateStats(){
+  const t=packages.length,ok=packages.filter(p=>p.motivo).length,sem=t-ok;
+  document.getElementById('stTotal').textContent=t;document.getElementById('stOk').textContent=ok;document.getElementById('stWarn').textContent=sem;
+  document.getElementById('pillOk').style.display=ok?'':'none';document.getElementById('pillWarn').style.display=sem?'':'none';
+  document.getElementById('pkgCt').textContent=t;
+  const hu=v('numHU')||'HU_001',dest=v('destino')||'—',dt=v('dataEnvio')?new Date(v('dataEnvio')+'T12:00').toLocaleDateString('pt-BR'):'—';
+  document.getElementById('emailSubj').value=`[SMG6] ${hu} → ${dest} | ${t} shipments | ${dt}`;
+}
+function renderTable(){
+  const tb=document.getElementById('pkgBody');
+  if(!packages.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><i class="ti ti-barcode" style="font-size:30px;opacity:.2;display:block;margin-bottom:8px"></i>Bipe ou importe IDs para começar</div></td></tr>';return;}
+  const mOpts='<option value="">— sem motivo —</option>'+MOTIVOS.map(m=>`<option value="${m.label}">${m.label}</option>`).join('');
+  tb.innerHTML=packages.map((p,i)=>`<tr class="${selected.has(p.id)?'sel':''}" id="row${p.id}">
+    <td><input type="checkbox" ${selected.has(p.id)?'checked':''} onchange="toggleSel(${p.id},this.checked)" /></td>
+    <td class="td-seq">${i+1}</td>
+    <td class="td-mono" title="${p.shipmentId}">${p.shipmentId}</td>
+    <td><input class="td-inp" value="${p.destino}" onchange="setProp(${p.id},'destino',this.value)" placeholder="BRXSP5" /></td>
+    <td style="text-align:center"><span id="dot_${p.id}" class="motivo-dot ${getMC(p.motivo)}" style="display:${p.motivo?'inline-block':'none'}"></span></td>
+    <td><select class="td-sel" onchange="setProp(${p.id},'motivo',this.value)">${mOpts}</select></td>
+    <td><input class="td-inp" value="${p.obs}" onchange="setProp(${p.id},'obs',this.value)" placeholder="..." /></td>
+    <td><button class="del-btn" onclick="deletePkg(${p.id})"><i class="ti ti-x"></i></button></td>
+  </tr>`).join('');
+  packages.forEach(p=>{const s=document.querySelector(`#row${p.id} select`);if(s)s.value=p.motivo||'';});
+  document.getElementById('chkAll').checked=packages.length>0&&selected.size===packages.length;
+}
+let fbT;
+function flashFb(type,msg){const b=document.getElementById('fb');b.innerHTML=`<i class="ti ti-${type==='ok'?'circle-check':'alert-triangle'}"></i> ${msg}`;b.className=`fb ${type}`;clearTimeout(fbT);fbT=setTimeout(()=>{b.style.display='none';b.className='fb';},3000);}
+function flashScan(cls){const i=document.getElementById('scanInput');i.classList.add(cls);setTimeout(()=>i.classList.remove(cls),700);}
+function addEmail(){const i=document.getElementById('emailInp'),val=i.value.trim();if(val&&val.includes('@')&&!emails.includes(val)){emails.push(val);i.value='';renderEmailTags();}}
+function removeEmail(e){emails=emails.filter(x=>x!==e);renderEmailTags();}
+function renderEmailTags(){document.getElementById('emailTags').innerHTML=emails.map(e=>`<span class="etag"><i class="ti ti-mail" style="font-size:11px"></i>${e}<button onclick="removeEmail('${e}')">×</button></span>`).join('');}
+function getH(){return{numHU:v('numHU')||'HU_001',dest:v('destino'),orig:v('origem')||'SMG6 - Uberlândia',dataEnvio:v('dataEnvio')||null,lo:v('lacreOrigen'),sc:parseInt(v('sacas'))||0,pl:parseInt(v('pallets'))||0,op:v('operador')};}
+async function testConn(){
+  const url=v('sbUrl').replace(/\/$/,''),key=v('sbKey');
+  if(!url||!key){showTR(false,'Cole a URL e a Key');return;}
+  try{const r=await fetch(`${url}/rest/v1/expedicao_shipments?limit=1`,{headers:{'apikey':key,'Authorization':`Bearer ${key}`}});
+  if(r.ok)showTR(true,'Conexão OK — tabela encontrada!');
+  else showTR(false,`Erro ${r.status} — verifique as credenciais`);}
+  catch(e){showTR(false,'Falha de rede');}
+}
+function showTR(ok,msg){const e=document.getElementById('testRes');e.style.display='block';e.style.color=ok?'var(--green)':'var(--red)';e.innerHTML=`<i class="ti ti-${ok?'circle-check':'alert-triangle'}"></i> ${msg}`;if(ok){document.getElementById('dbDot').className='db-dot ok';document.getElementById('dbLbl').textContent='Conectado';}}
+function showWarn(id){const e=document.getElementById(id);e.style.display='flex';setTimeout(()=>e.style.display='none',3000);}
+async function salvarSB(){
+  const url=v('sbUrl').replace(/\/$/,''),key=v('sbKey');
+  if(!url||!key){toggleSB();flashFb('err','Configure o Supabase antes de salvar');return;}
+  if(!packages.length){showWarn('warnP');return;}
+  const h=getH();
+  const records=packages.map(p=>({num_hu:h.numHU,destino_hu:h.dest,origem:h.orig,data_envio:h.dataEnvio||undefined,lacre_origen:h.lo,sacas:h.sc,pallets:h.pl,shipment_id:p.shipmentId,destino_ship:p.destino,motivo:p.motivo||null,observacao:p.obs||null,operador:h.op||null,status:'registrado'}));
+  setSaveSt('saving',`Salvando ${records.length} registros...`);
+  document.getElementById('dbDot').className='db-dot spin';document.getElementById('dbLbl').textContent='Salvando...';
+  try{
+    const r=await fetch(`${url}/rest/v1/expedicao_shipments`,{method:'POST',headers:{'Content-Type':'application/json','apikey':key,'Authorization':`Bearer ${key}`,'Prefer':'return=minimal'},body:JSON.stringify(records)});
+    if(r.ok||r.status===201){setSaveSt('saved',`✓ ${records.length} registros salvos no Supabase`);document.getElementById('dbDot').className='db-dot ok';document.getElementById('dbLbl').textContent='Salvo';return true;}
+    else{const t=await r.text();setSaveSt('saveerr',`Erro ${r.status}: ${t.substring(0,100)}`);document.getElementById('dbDot').className='db-dot err';return false;}
+  }catch(e){setSaveSt('saveerr',`Falha: ${e.message}`);document.getElementById('dbDot').className='db-dot err';return false;}
+}
+function setSaveSt(s,msg){const e=document.getElementById('saveSt');e.className=`save-st ${s}`;e.innerHTML=`<i class="ti ti-${s==='saving'?'loader':s==='saved'?'circle-check':'alert-triangle'}"></i> ${msg}`;}
+function gerarXLSX(){
+  if(!packages.length){showWarn('warnP');return;}
+  if(typeof XLSX==='undefined'){alert('Biblioteca ainda carregando...');return;}
+  const h=getH(),G='B4D84A',BK='000000';
+  const gL=(val,sz,al)=>({v:val,t:'s',s:{fill:{patternType:'solid',fgColor:{rgb:G}},font:{name:'Arial',sz:sz||11,bold:true,color:{rgb:BK}},alignment:{horizontal:al||'left',vertical:'center'}}});
+  const vC=val=>({v:val,t:'s',s:{font:{name:'Arial',sz:11,color:{rgb:BK}},alignment:{horizontal:'right',vertical:'center'}}});
+  const nC=val=>({v:val,t:'n',s:{font:{name:'Arial',sz:14,bold:true,color:{rgb:BK}},alignment:{horizontal:'center',vertical:'center'}}});
+  const dC=val=>({v:val,t:'s',s:{font:{name:'Arial',sz:11,color:{rgb:BK}},alignment:{horizontal:'center'}}});
+  const wb=XLSX.utils.book_new(),ws={};
+  ws['B2']={v:`SVC       ${h.orig}`,t:'s',s:{fill:{patternType:'solid',fgColor:{rgb:G}},font:{name:'Arial',sz:24,bold:true,color:{rgb:BK}},alignment:{horizontal:'center',vertical:'center'}}};
+  ws['B7']=gL('DESTINO (XD/FULL):');ws['D7']={v:h.dest,t:'s',s:{font:{name:'Arial',sz:14,bold:true,color:{rgb:BK}},alignment:{horizontal:'right',vertical:'center'}}};
+  ws['J7']=gL('TOTAL DE PEDIDOS',10,'center');ws['K7']=gL('TOTAL DE SACAS',10,'center');ws['L7']=gL('TOTAL DE PALLETS',10,'center');
+  ws['J8']=nC(packages.length);ws['K8']=nC(h.sc);ws['L8']=nC(h.pl);
+  ws['B9']=gL('DATA DO ENVIO:');ws['D9']=vC(h.dataEnvio?new Date(h.dataEnvio+'T12:00').toLocaleDateString('pt-BR'):'');
+  ws['B10']=gL('LACRE ORIGEN (SVC):');ws['D10']=vC(h.lo);
+  ws['B12']=gL('Nº HU:');ws['D12']=vC(h.numHU);
+  ws['B14']=gL('Nº SHIPMENT',11,'center');ws['D14']=gL('DESTINO (XD/FULL)',11,'center');ws['F14']=gL('MOTIVOS',11,'center');ws['H14']=gL('OBSERVACIONES',11,'center');
+  packages.forEach((p,i)=>{const r=15+i;ws[`B${r}`]=dC(p.shipmentId);ws[`D${r}`]=dC(p.destino);ws[`F${r}`]=dC(p.motivo);ws[`H${r}`]=dC(p.obs);});
+  ws['!ref']=`A1:N${Math.max(26,15+packages.length+1)}`;
+  ws['!merges']=[{s:{r:1,c:1},e:{r:4,c:12}},{s:{r:5,c:1},e:{r:5,c:12}},{s:{r:6,c:1},e:{r:7,c:2}},{s:{r:6,c:3},e:{r:7,c:4}},{s:{r:7,c:9},e:{r:11,c:9}},{s:{r:7,c:10},e:{r:11,c:10}},{s:{r:7,c:11},e:{r:11,c:11}},{s:{r:8,c:1},e:{r:8,c:2}},{s:{r:8,c:3},e:{r:8,c:4}},{s:{r:9,c:1},e:{r:9,c:2}},{s:{r:9,c:3},e:{r:9,c:4}},{s:{r:11,c:1},e:{r:11,c:2}},{s:{r:11,c:3},e:{r:11,c:4}}];
+  ws['!cols']=[{wch:12},{wch:21},{wch:12},{wch:21},{wch:12},{wch:21},{wch:10},{wch:21},{wch:10},{wch:18},{wch:16},{wch:16},{wch:7},{wch:6}];
+  XLSX.utils.book_append_sheet(wb,ws,'Hoja 1');
+  XLSX.writeFile(wb,`romaneio_${h.numHU.replace(/[^a-zA-Z0-9]/g,'_')}.xlsx`);
+}
+function gerarCSV(){
+  if(!packages.length){showWarn('warnP');return;}
+  const h=getH(),dt=h.dataEnvio?new Date(h.dataEnvio+'T12:00').toLocaleDateString('pt-BR'):'';
+  const BOM='\uFEFF',hdr='Nº SHIPMENT;DESTINO;MOTIVOS;OBSERVACIONES;Nº HU;DATA DO ENVIO;OPERADOR\r\n';
+  const rows=packages.map(p=>[p.shipmentId,p.destino,p.motivo,p.obs,h.numHU,dt,h.op].map(x=>`"${(x||'').replace(/"/g,'""')}"`).join(';')+'\r\n').join('');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([BOM+hdr+rows],{type:'text/csv;charset=utf-8'}));a.download=`shipments_${h.numHU.replace(/[^a-zA-Z0-9]/g,'_')}.csv`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},200);
+}
+function abrirEmail(){
+  if(!emails.length){showWarn('warnE');return;}
+  if(!packages.length){showWarn('warnP');return;}
+  const h=getH(),dt=h.dataEnvio?new Date(h.dataEnvio+'T12:00').toLocaleDateString('pt-BR'):'—',safe=h.numHU.replace(/[^a-zA-Z0-9]/g,'_');
+  const body=`Prezada equipe,\n\nSegue romaneio. Anexe os arquivos:\n  • romaneio_${safe}.xlsx\n  • shipments_${safe}.csv\n\n${'━'.repeat(30)}\nNº HU: ${h.numHU} | Data: ${dt}\nOrigem: ${h.orig} | Destino: ${h.dest}\nLacre Origen: ${h.lo} | Sacas: ${h.sc} | Pallets: ${h.pl}\nTotal: ${packages.length} shipments\n${'━'.repeat(30)}\n\n${packages.map((p,i)=>`  ${String(i+1).padStart(2,'0')}. ${p.shipmentId} | ${p.destino||'—'} | ${p.motivo||'—'}${p.obs?' | '+p.obs:''}`).join('\n')}\n\nAtenciosamente,\nSMG6 — Expedição`;
+  window.open(`mailto:${emails.join(',')}?subject=${encodeURIComponent(v('emailSubj'))}&body=${encodeURIComponent(body)}`);
+}
+async function exportAll(){if(!packages.length){showWarn('warnP');return;}await salvarSB();gerarXLSX();setTimeout(gerarCSV,400);setTimeout(abrirEmail,800);}
+document.getElementById('numHU').value=fmtHU(huCounter);
+document.getElementById('dataEnvio').value=new Date().toISOString().split('T')[0];
+buildAll();updateStats();
+setTimeout(()=>document.getElementById('scanInput').focus(),200);
+</script>
+</body>
+</html>
