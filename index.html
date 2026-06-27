@@ -482,7 +482,8 @@ function abrirEmail(){
   const h=getH(),dt=h.dataEnvio?new Date(h.dataEnvio+'T12:00').toLocaleDateString('pt-BR'):'—';
   const safe=h.numHU.replace(/[^a-zA-Z0-9]/g,'_');
   const body=`Prezados,\n\nEncaminhamos para tratamento os pacotes listados abaixo, originados do ${h.orig}, referentes ao status Finalizador, para que a equipe receptora realize a geração da Etiqueta 2.0 e o devido reprocessamento.\n\n${'━'.repeat(40)}\nROMANEIO DE EXPEDIÇÃO\n${'━'.repeat(40)}\nNº HU        : ${h.numHU}\nData envio   : ${dt}\nOrigem       : ${h.orig}\nDestino      : ${h.dest}\nLacre Origen : ${h.lo||'—'}\nTotal        : ${packages.length} pacotes — Status Finalizador\n${'━'.repeat(40)}\n\nPACOTES — STATUS FINALIZADOR:\n\n${packages.map((p,i)=>`  ${String(i+1).padStart(2,'0')}. ${p.shipmentId} | ${p.destino||'—'} | ${p.motivo||'—'}${p.obs?' | '+p.obs:''}`).join('\n')}\n\n${'━'.repeat(40)}\n📎 Anexos: romaneio_${safe}.xlsx  |  shipments_${safe}.csv\n\nSolicitamos que, ao receber este romaneio, a equipe realize a conferência dos pacotes e proceda com a geração da Etiqueta 2.0 para cada shipment listado.\n\nEm caso de divergência ou dúvida, favor retornar este email ou acionar via canal interno.\n\nAtenciosamente,\nEquipe de Expedição — SMG6\nMercado Livre | Uberlândia, MG\n${'━'.repeat(40)}`;
-  window.open(`mailto:${emails.join(',')}?subject=${encodeURIComponent(v('emailSubj'))}&body=${encodeURIComponent(body)}`);
+  const gmailUrl='https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(emails.join(','))+'&su='+encodeURIComponent(v('emailSubj'))+'&body='+encodeURIComponent(body);
+  window.open(gmailUrl,'_blank');
 }
 async function exportAll(){if(!packages.length){showWarn('warnP');return;}await salvarSB();gerarXLSX();setTimeout(gerarCSV,400);setTimeout(abrirEmail,800);}
 document.getElementById('numHU').value=fmtHU(huCounter);
